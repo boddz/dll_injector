@@ -22,59 +22,8 @@
 #include <Psapi.h>
 #include <processthreadsapi.h>
 
-
-#define HELP_ME_VA_ARGS "usage:\n\t", this_file, " <pid> <dll_file>"
-
-
-/**
- * Combines the str result of `GetLastError()` with the internal `quick_error()` macro for actually good output on
- * process handling errors and stuff.
- */
-#define quick_windows_fmt_error(last_err_code, fmt, ...) { \
-        const DWORD last_err = GetLastError();  \
-        char fmt_msg_buffer[1024] = {0}, join_fmt_msg[1024] = {0}; \
-        FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, NULL, last_err, LANG_SYSTEM_DEFAULT, (char*) &fmt_msg_buffer, \
-                      sizeof(fmt_msg_buffer), NULL); \
-        sprintf_s((char*) &join_fmt_msg, sizeof(join_fmt_msg), fmt, __VA_ARGS__); \
-        fmt_msg_buffer[0] = tolower(fmt_msg_buffer[0]); \
-        quick_error(EXIT_FAILURE, "%s: %s\033[1A", join_fmt_msg, fmt_msg_buffer); \
-}
-
-
-#define quick_error(code, fmt, ...) { \
-    char tmp_prefix_buffer[1024] = {0}; \
-    sprintf_s((char*) &tmp_prefix_buffer, sizeof(tmp_prefix_buffer), "%s: fatal error: ", this_file); \
-    manual_error(EXIT_FAILURE, tmp_prefix_buffer, fmt, __VA_ARGS__); \
-}
-
-
-/**
- * Exit using `exit_code` after printing a prefixed error with standard printf style va_args formatting.
- */
-static void manual_error(const int exit_code, const char* prefix, const char* fmt, ...)
-{
-    char va_str_buffer[1024] = {0};
-    sprintf_s((char*) &va_str_buffer, sizeof(va_str_buffer), "%s", prefix);
-    fprintf(stderr, "%s", va_str_buffer);
-
-    va_list args_list;
-    va_start(args_list, fmt);
-    vsprintf_s((char*) &va_str_buffer, sizeof(va_str_buffer), fmt, args_list);
-    fprintf(stderr, "%s\n", va_str_buffer);
-
-    exit(exit_code);
-}
-
-
-/**
- * Retrieve the file name from at the end of a file path.
- */
-static const char* extract_filename(const char* fp, const size_t fp_len)
-{
-    size_t index_rev = fp_len;
-    for(; index_rev > 0; --index_rev) if(fp[index_rev] == '\\' || fp[index_rev] == '/' /* Just incase */) break;
-    return &fp[index_rev] + 1;
-}
+#include "autoproc.h" // All headers are included here, but I left the above just for readability.
+#include "utils.h"    //
 
 
 int main(const int argc, const char** argv)
@@ -82,18 +31,35 @@ int main(const int argc, const char** argv)
     const char* this_fp_raw = argv[0];
     const char* this_file = extract_filename(this_fp_raw, strlen(this_fp_raw));
 
-    if(argc != 3) quick_error(EXIT_FAILURE, "too little args used.\n%s%s%s", HELP_ME_VA_ARGS);
+    if(argc < 3) quick_error(EXIT_FAILURE, "too little args used.\n%s%s%s", HELP_ME_TOO_LITTLE);
+    BOOL auto_flag_enabled = FALSE;
     const char* varg_pid_raw = argv[1];
     const char* varg_dll_raw = argv[2];
+    if(!strcmp(varg_pid_raw, "auto")) { // Adjust arg pointers if flag auto is used;
+        if(argc < 4) quick_error(EXIT_FAILURE, "invalid auto PID args count used.\n%s%s%s", HELP_ME_AUTO_PID);
+        auto_flag_enabled = TRUE;
+        varg_pid_raw = argv[2];
+        varg_dll_raw = argv[3];
+    }
     TCHAR abs_dll_path[1024] = {0};
     DWORD abs_dll_path_len = GetFullPathNameA(varg_dll_raw, sizeof(abs_dll_path),
                                               (LPSTR) abs_dll_path, NULL); // Abs path for the DLL module payload.
     if(!abs_dll_path_len)
         quick_windows_fmt_error(EXIT_FAILURE, "%sfailed to get dll module absolute path", "");
 
-    const DWORD atoll_result = atoll(varg_pid_raw);
-    if(!atoll_result && varg_pid_raw[0] != '0')
-        quick_error(EXIT_FAILURE, "the PID should be a non-floating point number, not `%s`", varg_pid_raw);
+    DWORD atoll_result = atoll(varg_pid_raw);
+    if(!atoll_result) { // PID 0 is not supported here, and I mean you shouldn't attach to it anyways so cba.
+        if(auto_flag_enabled) {
+            HANDLE main_auto;
+            HANDLE auto_proc_res = get_a_process_by_name(varg_pid_raw, &main_auto);
+            if(!auto_proc_res) quick_error(EXIT_FAILURE, "could not auto get a pid for %s", varg_pid_raw);
+            atoll_result = GetProcessId(auto_proc_res);
+            printf("Found auto PID: %lu\n", atoll_result);
+        } else {
+            quick_error(EXIT_FAILURE, "the PID should be a non-floating point number, not `%s` (PID of 0 not supported)",
+                        varg_pid_raw);
+        }
+    }
 
     FILE* fhandle; // Just to check the file path exists, file handle is not directly needed so instantly closed.
     fopen_s(&fhandle, varg_dll_raw, "r");
@@ -121,6 +87,8 @@ int main(const int argc, const char** argv)
                                               vmem_alloc_base_address, 0, NULL);
 
     if(!remote_thread) quick_windows_fmt_error(GetLastError(), "%sfailed to create remote thread to load DLL", "");
+
+    fprintf(stdout, "Injection to main process complete!\n");
 
     return EXIT_SUCCESS;
 }
