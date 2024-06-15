@@ -15,20 +15,21 @@ Inject a DLL module into a specific process ID (PID).
 dllinjector.exe 23212 mymodule.dll
 ```
 
+Automatically get the PID and inject for a specific exe currently running.
+
+```powershell
+              # <flag> <PID> <DLL Module>
+dllinjector.exe auto foo.exe mymodule.dll
+```
+
 
 ## Build
 
-If you have GNU make installed, just simply type `make` in a shell instance in the source directory, this will produce
+Requires GNU make. Just simply type `make` in a shell instance in the source directory, this will produce
 a binary in the ./build directory.
-
-Without make, you can type the following (swapping out clang for your compiler of choice):
-
-```powershell
-clang -std=c99 -Wall -Wextra main.c -o dllinjector.exe
-```
 
 
 ## To-dos
 
 - Configuration through an INI file.
-- Automatic function for getting a process ID by name.
+- <del>Automatic function for getting a process ID by name.</del>
