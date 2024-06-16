@@ -12,14 +12,14 @@ Inject a DLL module into a specific process ID (PID).
 
 ```powershell
               # <PID> <DLL Module>
-dllinjector.exe 23212 mymodule.dll
+dllinject.exe 23212 mymodule.dll
 ```
 
 Automatically get the PID and inject for a specific exe currently running.
 
 ```powershell
               # <flag> <PID> <DLL Module>
-dllinjector.exe auto foo.exe mymodule.dll
+dllinject.exe auto foo.exe mymodule.dll
 ```
 
 
