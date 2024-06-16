@@ -2,6 +2,10 @@
 #include "utils.h"
 
 
+/**
+ * Enumerate until `proc_name` is matched in active processes, else return null. No memory allocation is done, so the
+ * output pointer is the handle address stored at `out_proc_handle`.
+ */
 HANDLE get_a_process_by_name(const char* proc_name, HANDLE out_proc_handle)
 {
     unsigned int i;
