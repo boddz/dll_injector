@@ -31,12 +31,14 @@ int main(const int argc, const char** argv)
     const char* this_fp_raw = argv[0];
     const char* this_file = extract_filename(this_fp_raw, strlen(this_fp_raw));
 
-    if(argc < 3) quick_error(EXIT_FAILURE, "too little args used.\n%s%s%s", HELP_ME_TOO_LITTLE);
+    if(argc < 3) quick_error(EXIT_FAILURE, "too little args used.\nusage:\n\t%s%s\n\t%s%s",
+                            this_file, " <pid> <dll_module>", this_file, " auto <exe_name> <dll_module>");
     BOOL auto_flag_enabled = FALSE;
     const char* varg_pid_raw = argv[1];
     const char* varg_dll_raw = argv[2];
     if(!strcmp(varg_pid_raw, "auto")) { // Adjust arg pointers if flag auto is used;
-        if(argc < 4) quick_error(EXIT_FAILURE, "invalid auto PID args count used.\n%s%s%s", HELP_ME_AUTO_PID);
+        if(argc < 4) quick_error(EXIT_FAILURE, "invalid auto PID args count used.\nusage:\n\t%s%s",
+                                 this_file, " <pid> <dll_module>");
         auto_flag_enabled = TRUE;
         varg_pid_raw = argv[2];
         varg_dll_raw = argv[3];
@@ -62,11 +64,11 @@ int main(const int argc, const char** argv)
     }
 
     FILE* fhandle; // Just to check the file path exists, file handle is not directly needed so instantly closed.
-    fopen_s(&fhandle, varg_dll_raw, "r");
-    if(!fhandle) {
-        fclose(fhandle);
+    int open_module_file_res = fopen_s(&fhandle, varg_dll_raw, "r");
+    if(open_module_file_res != 0) {
         quick_error(EXIT_FAILURE, "could not open file handle for DLL `%s`", varg_dll_raw);
     }
+    fclose(fhandle);
 
     HANDLE main_phandle = OpenProcess(PROCESS_ALL_ACCESS, FALSE, atoll_result); // Handle on the main PID process.
     if(!main_phandle) quick_windows_fmt_error(GetLastError(), "failed to open main process (PID: %s)",
