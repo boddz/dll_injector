@@ -14,7 +14,10 @@ clean:
 initbuild:
 	mkdir ${BUILD}
 
-main.c: clean initbuild autoproc.o utils.o
+run.c: clean initbuild
+	${CC} -std=${STANDARD} ${FLAGS} run.c -o ${BUILD}/autorun.exe
+
+main.c: clean initbuild autoproc.o utils.o run.c
 	${CC} -std=${STANDARD} ${FLAGS} -I${INCLUDE} ${OBJECTS} main.c -o ${BUILD}/${EXE}
 
 run: all
