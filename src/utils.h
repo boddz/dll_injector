@@ -10,6 +10,8 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <stdlib.h>
+#include <string.h>
+#include <stdbool.h>
 
 
 /**
@@ -26,25 +28,16 @@
         quick_error(EXIT_FAILURE, "%s: %s\033[1A", join_fmt_msg, fmt_msg_buffer); \
 }
 
-
 #define quick_error(code, fmt, ...) { \
     char tmp_prefix_buffer[1024] = {0}; \
     sprintf_s((char*) &tmp_prefix_buffer, sizeof(tmp_prefix_buffer), "%s: fatal error: ", this_file); \
     manual_error(EXIT_FAILURE, tmp_prefix_buffer, fmt, __VA_ARGS__); \
 }
 
-
-/**
- * Exit using `exit_code` after printing a prefixed error with standard printf style va_args formatting.
- */
 void manual_error(const int exit_code, const char* prefix, const char* fmt, ...);
 
-
-/**
- * Retrieve the file name from at the end of a file path.
- */
 const char* extract_filename(const char* fp, const size_t fp_len);
 
-
+bool same_file_ext(const char* ext, const char* compare);
 
 #endif

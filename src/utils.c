@@ -28,3 +28,17 @@ const char* extract_filename(const char* fp, const size_t fp_len)
     for(; index_rev > 0; --index_rev) if(fp[index_rev] == '\\' || fp[index_rev] == '/' /* Just incase */) break;
     return &fp[index_rev] + 1;
 }
+
+
+/**
+ * Check if a file ext matches a comparison case. 
+ */
+bool same_file_ext(const char* ext, const char* compare)
+{
+    int ext_len = strlen(ext);
+    char* ext_starts = (char*) ext;
+    for(int reverse_i = ext_len; reverse_i > 0; --reverse_i) {
+        if(ext[reverse_i] == '.') ext_starts = (char*) &ext[reverse_i];
+    }
+    return strcmp(ext_starts, compare) ? false : true;
+}
