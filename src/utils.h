@@ -12,10 +12,6 @@
 #include <stdlib.h>
 
 
-#define HELP_ME_TOO_LITTLE "usage:\n\t", this_file, " <pid> <dll_file>"
-#define HELP_ME_AUTO_PID "usage:\n\t", this_file, " auto <pid> <dll_file>"
-
-
 /**
  * Combines the str result of `GetLastError()` with the internal `quick_error()` macro for actually good output on
  * process handling errors and stuff.
