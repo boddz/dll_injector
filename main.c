@@ -63,6 +63,9 @@ int main(const int argc, const char** argv)
         }
     }
 
+    //TODO: a better check here for DLL. Check file magic bytes or something, but this will do for now.
+    if(!same_file_ext(varg_dll_raw, ".dll")) quick_error(EXIT_FAILURE, "%s", "make sure your module is a DLL file");
+
     FILE* fhandle; // Just to check the file path exists, file handle is not directly needed so instantly closed.
     int open_module_file_res = fopen_s(&fhandle, varg_dll_raw, "r");
     if(open_module_file_res != 0) {
